@@ -292,6 +292,11 @@ struct mdss_dsi_ctrl_pdata {
 
 	struct dsi_buf tx_buf;
 	struct dsi_buf rx_buf;
+/*[Arima5908][32703][StevenChen] LCM driver porting 2014/01/03 begin */
+#ifdef CONFIG_SONY_FLAMINGO
+	struct regulator *vdd_io_vreg;
+	struct regulator *vdda_vreg;
+#endif	
 };
 
 int dsi_panel_device_register(struct device_node *pan_node,

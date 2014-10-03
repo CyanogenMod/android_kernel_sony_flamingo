@@ -493,6 +493,8 @@ static void bark_work_func(struct work_struct *work)
 		input_sync(pon->pon_input);
 		enable_irq(cfg->bark_irq);
 	} else {
+/* [Arima5908][32719][JessicaTseng] [All][Main][KEY][DMS]Porting reset key 20140103 start */
+#if IS_KEEP_DISABLE_S2_RESET
 		/* disable reset */
 		rc = qpnp_pon_masked_write(pon, cfg->s2_cntl2_addr,
 				QPNP_PON_S2_CNTL_EN, 0);
@@ -501,6 +503,7 @@ static void bark_work_func(struct work_struct *work)
 				"Unable to configure S2 enable\n");
 			goto err_return;
 		}
+#endif
 		/* re-arm the work */
 		schedule_delayed_work(&pon->bark_work, QPNP_KEY_STATUS_DELAY);
 	}
@@ -511,7 +514,10 @@ err_return:
 
 static irqreturn_t qpnp_resin_bark_irq(int irq, void *_pon)
 {
+/* [Arima5908][32719][JessicaTseng] [All][Main][KEY][DMS]Porting reset key 20140103 start */
+#if IS_KEEP_DISABLE_S2_RESET
 	int rc;
+#endif
 	struct qpnp_pon *pon = _pon;
 	struct qpnp_pon_config *cfg;
 
@@ -524,6 +530,8 @@ static irqreturn_t qpnp_resin_bark_irq(int irq, void *_pon)
 		goto err_exit;
 	}
 
+/* [Arima5908][32719][JessicaTseng] [All][Main][KEY][DMS]Porting reset key 20140103 start */
+#if IS_KEEP_DISABLE_S2_RESET
 	/* disable reset */
 	rc = qpnp_pon_masked_write(pon, cfg->s2_cntl2_addr,
 					QPNP_PON_S2_CNTL_EN, 0);
@@ -531,6 +539,7 @@ static irqreturn_t qpnp_resin_bark_irq(int irq, void *_pon)
 		dev_err(&pon->spmi->dev, "Unable to configure S2 enable\n");
 		goto err_exit;
 	}
+#endif
 
 	/* report the key event */
 	input_report_key(pon->pon_input, cfg->key_code, 1);
@@ -1003,7 +1012,11 @@ static int __devinit qpnp_pon_config_init(struct qpnp_pon *pon)
 			goto unreg_input_dev;
 		}
 		/* Configure the reset-configuration */
+#ifdef CONFIG_SONY_FLAMINGO
+		if ((cfg->support_reset) && (cfg->pon_type == PON_KPDPWR_RESIN)) {
+#else
 		if (cfg->support_reset) {
+#endif
 			rc = qpnp_config_reset(pon, cfg);
 			if (rc) {
 				dev_err(&pon->spmi->dev,
@@ -1154,6 +1167,8 @@ static int __devinit qpnp_pon_probe(struct spmi_device *spmi)
 		}
 
 		/* 0 is a special value to indicate instant s3 reset */
+/* [Arima5908][33332][JessicaTseng] [All][Main][Key][DMS]S3 reset timer is only controlled in SBL 20140123 start */
+#if IS_KEEP_DISABLE_S3_RESET
 		if (s3_debounce != 0)
 			s3_debounce = ilog2(s3_debounce);
 		rc = qpnp_pon_masked_write(pon, QPNP_PON_S3_DBC_CTL(pon->base),
@@ -1162,6 +1177,7 @@ static int __devinit qpnp_pon_probe(struct spmi_device *spmi)
 			dev_err(&spmi->dev, "Unable to set S3 debounce\n");
 			return rc;
 		}
+#endif
 	}
 
 	dev_set_drvdata(&spmi->dev, pon);

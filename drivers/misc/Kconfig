@@ -673,4 +673,11 @@ source "drivers/misc/ti-st/Kconfig"
 source "drivers/misc/lis3lv02d/Kconfig"
 source "drivers/misc/carma/Kconfig"
 source "drivers/misc/altera-stapl/Kconfig"
+# /* --- [All][Main][NFC][DMS][LuboLu] Porting NFC(NXP PN547). 20140103 begin --- */
+config PN544
+	bool "NXP PN544 NFC Controller Driver"
+	default n
+	help
+	  NXP PN544 Near Field Communication controller support.
+# /* --- [All][Main][NFC][DMS][LuboLu] 20140103 end   --- */
 endmenu

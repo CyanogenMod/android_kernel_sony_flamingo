@@ -138,6 +138,13 @@ enum power_supply_property {
 	POWER_SUPPLY_PROP_SCOPE,
 	POWER_SUPPLY_PROP_SYSTEM_TEMP_LEVEL,
 	POWER_SUPPLY_PROP_RESISTANCE,
+/*[Arima5911][33810][bozhi_lin] For charging safety: set warm battery state and cool battery state to meet requirement 20140321 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	POWER_SUPPLY_PROP_COLD_TEMP,
+	POWER_SUPPLY_PROP_HOT_TEMP,
+	POWER_SUPPLY_PROP_IS_DURING_CALL,
+	POWER_SUPPLY_PROP_IS_MAINTAIN,
+#endif
 	/* Properties of type `const char *' */
 	POWER_SUPPLY_PROP_MODEL_NAME,
 	POWER_SUPPLY_PROP_MANUFACTURER,

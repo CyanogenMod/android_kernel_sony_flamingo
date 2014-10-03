@@ -1063,8 +1063,14 @@ static int msm_isp_update_stream_bandwidth(struct vfe_device *vfe_dev)
 	if (num_pix_streams > 0)
 		total_pix_bandwidth = total_pix_bandwidth /
 			num_pix_streams * (num_pix_streams - 1) +
+//[All][Main][Camera][35917] QCT Patch for AF and Throughput issue 20140409 S
+#ifdef CONFIG_SONY_FLAMINGO
+			((unsigned long)axi_data->src_info[VFE_PIX_0].pixel_clock) *
+			ISP_DEFAULT_FORMAT_FACTOR / ISP_Q2;
+#else
 			axi_data->src_info[VFE_PIX_0].pixel_clock *
 			ISP_DEFAULT_FORMAT_FACTOR / ISP_Q2;
+#endif
 	total_bandwidth = total_pix_bandwidth + total_rdi_bandwidth;
 
 	rc = msm_isp_update_bandwidth(ISP_VFE0 + vfe_dev->pdev->id,

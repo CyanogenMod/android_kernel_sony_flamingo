@@ -185,6 +185,13 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(scope),
 	POWER_SUPPLY_ATTR(system_temp_level),
 	POWER_SUPPLY_ATTR(resistance),
+/*[Arima5911][33810][bozhi_lin] For charging safety: set warm battery state and cool battery state to meet requirement 20140321 begin*/	
+#ifdef CONFIG_SONY_FLAMINGO
+	POWER_SUPPLY_ATTR(temp_cold),
+	POWER_SUPPLY_ATTR(temp_hot),
+	POWER_SUPPLY_ATTR(is_during_call),
+	POWER_SUPPLY_ATTR(is_maintain),
+#endif
 	/* Properties of type `const char *' */
 	POWER_SUPPLY_ATTR(model_name),
 	POWER_SUPPLY_ATTR(manufacturer),
@@ -310,6 +317,15 @@ int power_supply_uevent(struct device *dev, struct kobj_uevent_env *env)
 		}
 
 		dev_dbg(dev, "prop %s=%s\n", attrname, prop_buf);
+
+/*[Arima5911][34482][bozhi_lin] set VBAT_DET to 4V during call 20140321 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+		if ((env->envp_idx+1) >= UEVENT_NUM_ENVP) {
+			kfree(attrname);
+			ret = 0;
+			goto out;	
+		}
+#endif
 
 		ret = add_uevent_var(env, "POWER_SUPPLY_%s=%s", attrname, prop_buf);
 		kfree(attrname);

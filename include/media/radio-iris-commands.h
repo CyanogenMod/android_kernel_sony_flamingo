@@ -1,10 +1,13 @@
 #ifndef __RADIO_IRIS_COMMANDS_H
 #define __RADIO_IRIS_COMMANDS_H
 
+//<2014/2/7-A000000033599-williamhu,[F[All][Main][App][] FP17909 FM Radio solution]  _begin
+#ifdef __KERNEL__
 #include <linux/skbuff.h>
 #include <linux/interrupt.h>
 #include <linux/mutex.h>
 #include <linux/atomic.h>
+#endif
 
 enum v4l2_cid_private_iris_t {
 	V4L2_CID_PRIVATE_IRIS_SRCHMODE = (0x08000000 + 1),

@@ -1404,6 +1404,10 @@ static void binder_transaction(struct binder_proc *proc,
 	struct binder_transaction *t;
 	struct binder_work *tcomplete;
 	size_t *offp, *off_end;
+//<2014/08/18-QuakenTsai-42840, B[All][Main][FRAMWORK][DMS05913087][So]I&V-Aging: FATAL EXCEPTION IN SYSTEM PROCESS: PackageManager happened when launch contact
+#ifdef CONFIG_SONY_FLAMINGO
+	size_t off_min;
+#endif
 	struct binder_proc *target_proc;
 	struct binder_thread *target_thread = NULL;
 	struct binder_node *target_node = NULL;
@@ -1604,18 +1608,39 @@ static void binder_transaction(struct binder_proc *proc,
 		goto err_bad_offset;
 	}
 	off_end = (void *)offp + tr->offsets_size;
+//<2014/08/18-QuakenTsai-42840, B[All][Main][FRAMWORK][DMS05913087][So]I&V-Aging: FATAL EXCEPTION IN SYSTEM PROCESS: PackageManager happened when launch contact
+#ifdef CONFIG_SONY_FLAMINGO
+	off_min = 0;
+#endif
 	for (; offp < off_end; offp++) {
 		struct flat_binder_object *fp;
 		if (*offp > t->buffer->data_size - sizeof(*fp) ||
+//<2014/08/18-QuakenTsai-42840, B[All][Main][FRAMWORK][DMS05913087][So]I&V-Aging: FATAL EXCEPTION IN SYSTEM PROCESS: PackageManager happened when launch contact
+#ifdef CONFIG_SONY_FLAMINGO
+		    *offp < off_min ||
+#endif
 		    t->buffer->data_size < sizeof(*fp) ||
 		    !IS_ALIGNED(*offp, sizeof(void *))) {
 			binder_user_error("binder: %d:%d got transaction with "
+//<2014/08/18-QuakenTsai-42840, B[All][Main][FRAMWORK][DMS05913087][So]I&V-Aging: FATAL EXCEPTION IN SYSTEM PROCESS: PackageManager happened when launch contact			
+#ifdef CONFIG_SONY_FLAMINGO
+				"invalid offset, %zd (min %zd, max %zd)\n",
+				proc->pid, thread->pid, *offp,
+				off_min,
+				(size_t)(t->buffer->data_size -
+				sizeof(*fp)));
+#else
 				"invalid offset, %zd\n",
 				proc->pid, thread->pid, *offp);
+#endif
 			return_error = BR_FAILED_REPLY;
 			goto err_bad_offset;
 		}
 		fp = (struct flat_binder_object *)(t->buffer->data + *offp);
+//<2014/08/18-QuakenTsai-42840, B[All][Main][FRAMWORK][DMS05913087][So]I&V-Aging: FATAL EXCEPTION IN SYSTEM PROCESS: PackageManager happened when launch contact
+#ifdef CONFIG_SONY_FLAMINGO
+		off_min = *offp + sizeof(struct flat_binder_object);
+#endif
 		switch (fp->type) {
 		case BINDER_TYPE_BINDER:
 		case BINDER_TYPE_WEAK_BINDER: {

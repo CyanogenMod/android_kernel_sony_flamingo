@@ -238,6 +238,13 @@ Subnode properties:
 					qcom,cont-splash-enabled entry present in
 					panel configuration.
 
+- qcom,mdss-fb-splash-logo-enabled: The boolean entry enables the framebuffer 
+ 			 driver to display the splash logo image. 
+			 It is independent of continuous splash 
+			 screen feature and has no relation with 
+			 qcom,cont-splash-enabled entry present in 
+			 panel configuration. 
+
 Example:
 	mdss_mdp: qcom,mdss_mdp@fd900000 {
 		compatible = "qcom,mdss_mdp";

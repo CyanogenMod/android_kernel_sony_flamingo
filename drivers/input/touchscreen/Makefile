@@ -84,3 +84,6 @@ obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)		+= synaptics_i2c_rmi4.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI4_DEV)	+= synaptics_rmi_dev.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE) 	+= synaptics_fw_update.o
 obj-$(CONFIG_TOUCHSCREEN_GT9XX)		+= gt9xx/
+#//[All][Main][TP][32772]20140106,Eric, Porting elan-ektf3135 touch driver. 
+obj-$(CONFIG_TOUCHSCREEN_ELAN_EKTF3135) += ektf2k.o
+#//[All][Main][TP][32772]end

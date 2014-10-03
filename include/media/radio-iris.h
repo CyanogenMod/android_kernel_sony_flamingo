@@ -1,6 +1,7 @@
 /*
  *
  * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2013 Sony Mobile Communications AB.
  *
  * This file is based on include/net/bluetooth/hci_core.h
  *
@@ -27,11 +28,14 @@
 #ifndef __RADIO_HCI_CORE_H
 #define __RADIO_HCI_CORE_H
 
+//<2014/2/7-A000000033599-williamhu,[F[All][Main][App][] FP17909 FM Radio solution]  _begin
+#ifdef __KERNEL__
 #include <linux/skbuff.h>
 #include <linux/interrupt.h>
 #include <linux/mutex.h>
 #include <linux/atomic.h>
 #include "radio-iris-commands.h"
+#endif
 const unsigned char MIN_TX_TONE_VAL = 0x00;
 const unsigned char MAX_TX_TONE_VAL = 0x07;
 const unsigned char MIN_HARD_MUTE_VAL = 0x00;
@@ -77,6 +81,8 @@ const signed char MAX_SINR_TH = 127;
 const unsigned char MIN_SINR_SAMPLES = 0x01;
 const unsigned char MAX_SINR_SAMPLES = 0xFF;
 
+//<2014/2/11-A000000033599-williamhu,[F[All][Main][App][] FP17909 FM Radio solution]  _begin
+#ifdef __KERNEL__
 /* ---- HCI Packet structures ---- */
 #define RADIO_HCI_COMMAND_HDR_SIZE sizeof(struct radio_hci_command_hdr)
 #define RADIO_HCI_EVENT_HDR_SIZE   sizeof(struct radio_hci_event_hdr)
@@ -648,6 +654,7 @@ struct hci_fm_spur_data {
 
 #define hci_req_lock(d)		mutex_lock(&d->req_lock)
 #define hci_req_unlock(d)	mutex_unlock(&d->req_lock)
+#endif
 
 /* FM RDS */
 #define RDS_PTYPE 2
@@ -866,12 +873,15 @@ struct hci_cc_do_calibration_rsp {
 #define AUDIO_CTRL_INTR (1 << 2)
 #define AF_JUMP_ENABLE  (1 << 4)
 
+//<2014/2/7-A000000033599-williamhu,[F[All][Main][App][] FP17909 FM Radio solution]  _begin
+#ifdef __KERNEL__
 int hci_def_data_read(struct hci_fm_def_data_rd_req *arg,
 	struct radio_hci_dev *hdev);
 int hci_def_data_write(struct hci_fm_def_data_wr_req *arg,
 	struct radio_hci_dev *hdev);
 int hci_fm_do_calibration(__u8 *arg, struct radio_hci_dev *hdev);
 int hci_fm_do_calibration(__u8 *arg, struct radio_hci_dev *hdev);
+#endif
 
 static inline int is_valid_tone(int tone)
 {

@@ -70,3 +70,6 @@ obj-$(CONFIG_QSEECOM) += qseecom.o
 obj-$(CONFIG_QFP_FUSE) += qfp_fuse.o
 obj-$(CONFIG_TI_DRV2667) += ti_drv2667.o
 obj-$(CONFIG_QPNP_MISC) += qpnp-misc.o
+# /* --- [All][Main][NFC][DMS][LuboLu] Porting NFC(NXP PN547). 20140103 begin --- */
+obj-$(CONFIG_PN544) += pn544.o
+# /* --- [All][Main][NFC][DMS][LuboLu] 20140103 end   --- */

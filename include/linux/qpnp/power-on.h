@@ -15,6 +15,16 @@
 
 #include <linux/errno.h>
 
+/* [Arima5908][33332][JessicaTseng] [All][Main][Key][DMS]S3 reset timer is only controlled in SBL 20140123 start */
+/* [Arima5908][32719][JessicaTseng] [All][Main][KEY][DMS]Porting reset key 20140103 start */
+#ifdef CONFIG_SONY_FLAMINGO
+#define IS_KEEP_DISABLE_S2_RESET 0
+#define IS_KEEP_DISABLE_S3_RESET 0
+#else
+#define IS_KEEP_DISABLE_S2_RESET 1
+#define IS_KEEP_DISABLE_S3_RESET 1
+#endif
+
 /**
  * enum pon_trigger_source: List of PON trigger sources
  * %PON_SMPL:		PON triggered by SMPL - Sudden Momentary Power Loss

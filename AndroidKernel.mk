@@ -27,11 +27,13 @@ KERNEL_ZIMG = $(KERNEL_OUT)/arch/arm/boot/zImage
 DTC = $(KERNEL_OUT)/scripts/dtc/dtc
 
 define append-dtb
-mkdir -p $(KERNEL_OUT)/arch/arm/boot;\
-$(foreach DTS_NAME, $(DTS_NAMES), \
-   $(foreach d, $(DTS_FILES), \
-      $(DTC) -p 1024 -O dtb -o $(call DTB_FILE,$(d)) $(d); \
-      cat $(KERNEL_ZIMG) $(call DTB_FILE,$(d)) > $(call ZIMG_FILE,$(d));))
+# [All][Main][SI][DMS] Modify DTS multiple image with same platform-id issue 20140120 BEGIN
+#mkdir -p $(KERNEL_OUT)/arch/arm/boot;\
+#$(foreach DTS_NAME, $(DTS_NAMES), \
+#   $(foreach d, $(DTS_FILES), \
+#      $(DTC) -p 1024 -O dtb -o $(call DTB_FILE,$(d)) $(d); \
+#      cat $(KERNEL_ZIMG) $(call DTB_FILE,$(d)) > $(call ZIMG_FILE,$(d));))
+# [All][Main][SI][DMS] 20140120 END
 endef
 else
 

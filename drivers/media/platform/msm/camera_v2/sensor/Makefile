@@ -19,3 +19,10 @@ obj-$(CONFIG_OV5648) += ov5648.o
 obj-$(CONFIG_MT9M114) += mt9m114.o
 obj-$(CONFIG_SP1628) += sp1628.o
 obj-$(CONFIG_GC0339) += gc0339.o
+# [ALL][MAIN][CAMERA][Kent][32695.01Begin] rebase ov7695 camera sensor driver
+obj-$(CONFIG_S5K5EAYX) += s5k5eayx.o
+obj-$(CONFIG_IMX188) += imx188.o
+obj-$(CONFIG_OV5648_PDP1) += ov5648_pdp1.o
+obj-$(CONFIG_BF3905) += bf3905.o
+obj-$(CONFIG_S5K5E2) += s5k5e2.o
+obj-$(CONFIG_OV7695) += ov7695.o

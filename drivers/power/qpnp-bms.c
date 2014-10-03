@@ -79,7 +79,12 @@
 #define IADC1_BMS_FAST_AVG_EN		0x5B
 
 /* Configuration for saving of shutdown soc/iavg */
+/*[Arima5908][42364][bozhi_lin] workaround for battery capacity mismatch under -20 degreeC 20140807 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+#define IGNORE_SOC_TEMP_DECIDEG		(-300)
+#else
 #define IGNORE_SOC_TEMP_DECIDEG		50
+#endif
 #define IAVG_STEP_SIZE_MA		10
 #define IAVG_INVALID			0xFF
 #define SOC_INVALID			0x7E
@@ -94,6 +99,13 @@
 #define FCC_DEFAULT_TEMP			250
 
 #define QPNP_BMS_DEV_NAME "qcom,qpnp-bms"
+
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+#define CAPACITY_SMOOTH_TIME	60
+#define LOW_CAPACITY	5
+#define LOW_CAPACITY_SMOOTH_TIME	30
+#endif
 
 enum {
 	SHDW_CC,
@@ -286,6 +298,10 @@ struct qpnp_bms_chip {
 	struct qpnp_vadc_chip		*vadc_dev;
 	struct qpnp_iadc_chip		*iadc_dev;
 	struct qpnp_adc_tm_chip		*adc_tm_dev;
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	bool			last_is_charging;
+#endif
 };
 
 static struct of_device_id qpnp_bms_match_table[] = {
@@ -865,6 +881,27 @@ static bool is_batfet_closed(struct qpnp_bms_chip *chip)
 	pr_debug("battery power supply is not registered\n");
 	return true;
 }
+
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+static bool is_battery_maintain(struct qpnp_bms_chip *chip)
+{
+	union power_supply_propval ret = {0,};
+
+	if (chip->batt_psy == NULL)
+		chip->batt_psy = power_supply_get_by_name("battery");
+	if (chip->batt_psy) {
+		/* if battery has been registered, use the online property */
+		chip->batt_psy->get_property(chip->batt_psy,
+					POWER_SUPPLY_PROP_IS_MAINTAIN, &ret);
+		return !!ret.intval;
+	}
+
+	/* Default to true if the battery power supply is not registered. */
+	pr_debug("battery power supply is not registered\n");
+	return false;
+}
+#endif
 
 static int get_simultaneous_batt_v_and_i(struct qpnp_bms_chip *chip,
 					int *ibat_ua, int *vbat_uv)
@@ -1769,6 +1806,10 @@ static int report_voltage_based_soc(struct qpnp_bms_chip *chip)
 #define MAX_CATCHUP_SOC	(SOC_CATCHUP_SEC_MAX / SOC_CATCHUP_SEC_PER_PERCENT)
 #define SOC_CHANGE_PER_SEC		5
 #define REPORT_SOC_WAIT_MS		10000
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+static bool first_boot = false;
+#endif
 static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 {
 	int soc, soc_change;
@@ -1779,6 +1820,10 @@ static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 	int batt_temp;
 	int rc;
 	bool charging, charging_since_last_report;
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	int pc, vbatt;
+#endif
 
 	rc = wait_event_interruptible_timeout(chip->bms_wait_queue,
 			chip->calculated_soc != -EINVAL,
@@ -1806,12 +1851,51 @@ static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 	mutex_lock(&chip->last_soc_mutex);
 	soc = chip->calculated_soc;
 
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	get_battery_voltage(chip, &vbatt);
+	pc = interpolate_pc(chip->pc_temp_ocv_lut, 25, vbatt / 1000);
+	if (first_boot) {
+		soc = pc;
+		first_boot = false;
+		pr_debug("based on voltage boot up soc = %d\n", soc);
+	}
+#endif
+
 	last_change_sec = chip->last_soc_change_sec;
 	calculate_delta_time(&last_change_sec, &time_since_last_change_sec);
 
 	charging = is_battery_charging(chip);
 	charging_since_last_report = charging || (chip->last_soc_unbound
 			&& chip->was_charging_at_sleep);
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	if (is_battery_maintain(chip)) {
+		soc = 100;
+		get_current_time(&last_change_sec);
+		calculate_delta_time(&last_change_sec, &time_since_last_change_sec);
+		chip->last_soc_change_sec = last_change_sec;
+	}
+	else {
+		if (!charging) {
+			pr_debug("pc = %d, soc = %d\n", pc, soc);
+			if ( pc > soc) {
+				soc = pc;
+			}
+		}
+		
+		if (!charging && chip->last_is_charging) {
+			soc = chip->last_soc;
+		}
+	}
+	
+	if (charging) {
+		chip->last_is_charging = true;
+	}
+	else {
+		chip->last_is_charging = false;
+	}
+#endif
 	/*
 	 * account for charge time - limit it to SOC_CATCHUP_SEC to
 	 * avoid overflows when charging continues for extended periods
@@ -1876,8 +1960,28 @@ static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 
 		if (soc < chip->last_soc && soc != 0)
 			soc = chip->last_soc - soc_change;
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+		if (soc > chip->last_soc)
+			soc = chip->last_soc + soc_change;
+#else			
 		if (soc > chip->last_soc && soc != 100)
 			soc = chip->last_soc + soc_change;
+#endif
+
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+		if ( soc > LOW_CAPACITY) {
+			if (time_since_last_change_sec <= CAPACITY_SMOOTH_TIME) {
+				soc = chip->last_soc;
+			}
+		}
+		else {
+			if (time_since_last_change_sec <= LOW_CAPACITY_SMOOTH_TIME) {
+				soc = chip->last_soc;
+			}
+		}
+#endif
 	}
 
 	if (chip->last_soc != soc && !chip->last_soc_unbound)
@@ -1886,6 +1990,14 @@ static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 	pr_debug("last_soc = %d, calculated_soc = %d, soc = %d, time since last change = %d\n",
 			chip->last_soc, chip->calculated_soc,
 			soc, time_since_last_change_sec);
+/*[Arima5908][39939][bozhi_lin] implement battery capacity smooth mechanism for fine tune user feeling 20140620 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+	if ((chip->last_soc != -EINVAL) && (soc != chip->last_soc) && (time_since_last_change_sec > CAPACITY_SMOOTH_TIME)) {
+		if (chip->bms_psy_registered) {
+			power_supply_changed(&chip->bms_psy);
+		}
+	}
+#endif
 	chip->last_soc = bound_soc(soc);
 	backup_soc_and_iavg(chip, batt_temp, chip->last_soc);
 	pr_debug("Reported SOC = %d\n", chip->last_soc);

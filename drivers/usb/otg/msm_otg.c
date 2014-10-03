@@ -89,7 +89,12 @@ module_param(lpm_disconnect_thresh , uint, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(lpm_disconnect_thresh,
 	"Delay before entering LPM on USB disconnect");
 
+/*[Arima5911][35516][bozhi_lin] enable D+ D- floating charger 20140331 begin*/
+#ifdef CONFIG_SONY_FLAMINGO
+static bool floated_charger_enable = 1;
+#else   
 static bool floated_charger_enable;
+#endif
 module_param(floated_charger_enable , bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(floated_charger_enable,
 	"Whether to enable floated charger");

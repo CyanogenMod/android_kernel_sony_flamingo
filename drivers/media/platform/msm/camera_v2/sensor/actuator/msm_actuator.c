@@ -13,6 +13,7 @@
 #define pr_fmt(fmt) "%s:%d " fmt, __func__, __LINE__
 
 #include <linux/module.h>
+#include <linux/debugfs.h>
 #include "msm_sd.h"
 #include "msm_actuator.h"
 #include "msm_cci.h"
@@ -27,6 +28,11 @@ DEFINE_MSM_MUTEX(msm_actuator_mutex);
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 #endif
 
+//[All][Main][Camera][40101]Modify for Camera Second source 20140411 S
+#ifdef CONFIG_SONY_FLAMINGO
+extern uint16_t s5k5e2_version;
+#endif
+
 static struct msm_actuator msm_vcm_actuator_table;
 static struct msm_actuator msm_piezo_actuator_table;
 
@@ -35,6 +41,149 @@ static struct msm_actuator *actuators[] = {
 	&msm_vcm_actuator_table,
 	&msm_piezo_actuator_table,
 };
+
+//[All][Main][Camera][DMS][36693][Person Liu] Fine Tune by Qualcomm patch 20140421 S
+#ifdef CONFIG_SONY_FLAMINGO
+static void vcm_move_to(struct msm_actuator_ctrl_t *a_ctrl, int dac_value)
+{
+	struct msm_actuator_reg_params_t *write_arr = a_ctrl->reg_tbl;
+	uint16_t i2c_byte1 = 0, i2c_byte2 = 0;
+	uint16_t value = 0;
+	uint32_t size = a_ctrl->reg_tbl_size, i = 0;
+
+	for (i = 0; i < size; i++) {
+		if (write_arr[i].reg_write_type == MSM_ACTUATOR_WRITE_DAC) {
+			value = (dac_value <<
+				write_arr[i].data_shift);
+
+			if (write_arr[i].reg_addr != 0xFFFF) {
+				i2c_byte1 = write_arr[i].reg_addr;
+				i2c_byte2 = value;
+				if (size != (i+1)) {
+					i2c_byte2 = value & 0xFF;
+					printk("%s: <vcm> moving to %d, byte1:0x%x, byte2:0x%x\n", __func__, dac_value, i2c_byte1, i2c_byte2);
+					a_ctrl->i2c_client.i2c_func_tbl->i2c_write(&a_ctrl->i2c_client, i2c_byte1, i2c_byte2,a_ctrl->i2c_data_type);						
+					i++;
+					i2c_byte1 = write_arr[i].reg_addr;
+					i2c_byte2 = (value & 0xFF00) >> 8;
+				}
+			} else {
+				i2c_byte1 = (value & 0xFF00) >> 8;
+				i2c_byte2 = value & 0xFF;
+			}
+		} else {
+			i2c_byte1 = write_arr[i].reg_addr;
+			i2c_byte2 = 0;
+			printk("%s: <vcm> landed here", __func__);
+		}
+		printk("%s: <vcm> moving to %d, i2c_byte1:0x%x, i2c_byte2:0x%x\n", __func__, dac_value, i2c_byte1, i2c_byte2);
+		a_ctrl->i2c_client.i2c_func_tbl->i2c_write(&a_ctrl->i2c_client, i2c_byte1, i2c_byte2,a_ctrl->i2c_data_type);		
+	}
+}
+
+static int i2c_set_open(struct inode *inode, struct file *fp)
+{
+	fp->f_mode &= ~(FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE);
+	fp->private_data = inode->i_private;
+	return 0;
+}
+
+static ssize_t i2c_set_write(struct file *fp, const char __user *user_buffer, size_t count, loff_t *position)
+{
+	struct msm_actuator_ctrl_t *a_ctrl = fp->private_data;
+	char arg_buffer[20];
+	int value =0;
+
+	if(copy_from_user(&arg_buffer, user_buffer, count))
+	return -EFAULT;
+
+	sscanf(arg_buffer, "%d", &value);
+	vcm_move_to(a_ctrl,value);
+
+	return count;
+}
+
+static const struct file_operations i2c_set_fops = {
+	.open  = i2c_set_open,
+	.write = i2c_set_write,
+};
+
+static int vcm_open(struct inode *inode, struct file *fp)
+{
+	fp->f_mode &= ~(FMODE_LSEEK | FMODE_PREAD | FMODE_PWRITE);
+	fp->private_data = inode->i_private;
+	return 0;
+}
+
+static ssize_t vcm_write(struct file *fp, const char __user *user_buffer, size_t count, loff_t *position)
+{
+	struct msm_actuator_ctrl_t *a_ctrl = fp->private_data;
+	char arg_buffer[20];
+	char option[5];
+	int arg[3];
+
+	memset(arg_buffer, 0, sizeof(arg_buffer));
+	memset(option, 0, sizeof(option));
+	memset(arg, 0, sizeof(arg));
+
+	if(copy_from_user(&arg_buffer, user_buffer, count))
+		return -EFAULT;
+
+	sscanf(arg_buffer, "%s %d %d %d", option, &arg[0], &arg[1], &arg[2]);
+
+	if(strcmp(option, "-m")==0)
+	{
+		printk("%s: <vcm> option is -m\n", __func__);
+		vcm_move_to(a_ctrl,arg[0]);
+	}
+	else if(strcmp(option, "-r")==0)
+	{
+		int i;
+		printk("%s: <vcm> option is -r\n", __func__);
+		for(i=arg[0]; i<=arg[1]; i+=arg[2])
+		{
+			printk("%s: i= %d ", __func__, i);
+			vcm_move_to(a_ctrl, i);
+			msleep(100);
+		}
+		if(i!=arg[1])
+		{
+			printk("%s: i= %d ", __func__, arg[1]); 
+			vcm_move_to(a_ctrl, arg[1]);
+		}
+	}
+	else if(strcmp(option, "-s")==0)
+	{
+		int i;
+		printk("%s: <vcm> option is -s\n", __func__);
+		vcm_move_to(a_ctrl, a_ctrl->step_position_table[0]);
+		for(i=0; i <arg[0]; i++)
+		{
+			printk("%s: i= %d ", __func__, i);
+			vcm_move_to(a_ctrl,a_ctrl->step_position_table[i]);
+			msleep(100);
+		}
+		for(i=arg[0]-2; i >=0; i--)
+		{
+			printk("%s: i= %d ", __func__, i);
+			vcm_move_to(a_ctrl,a_ctrl->step_position_table[i]);
+			msleep(100);
+		}
+	}
+	else
+	{
+		printk("%s: <vcm> use -m for move.  -r 0 1023 10 for ringing characterization. -s 40 for sweep 40 steps\n", __func__);
+		return count;
+	}
+
+	return count;
+}
+
+static const struct file_operations vcm_fops = {
+	.open  = vcm_open,
+	.write = vcm_write,
+};
+#endif
 
 static int32_t msm_actuator_piezo_set_default_focus(
 	struct msm_actuator_ctrl_t *a_ctrl,
@@ -257,12 +406,15 @@ static int32_t msm_actuator_move_focus(
 	curr_lens_pos = a_ctrl->step_position_table[a_ctrl->curr_step_pos];
 	move_params->curr_lens_pos = curr_lens_pos;
 
+//[All][Main][Camera][DMS][36693][Person Liu] Fine Tune by Qualcomm patch 20140421 S
+#ifndef CONFIG_SONY_FLAMINGO
 	if (copy_from_user(&ringing_params_kernel,
 		&(move_params->ringing_params[a_ctrl->curr_region_index]),
 		sizeof(struct damping_params_t))) {
 		pr_err("copy_from_user failed\n");
 		return -EFAULT;
 	}
+#endif
 
 
 	CDBG("called, dir %d, num_steps %d\n", dir, num_steps);
@@ -278,6 +430,16 @@ static int32_t msm_actuator_move_focus(
 		step_boundary =
 			a_ctrl->region_params[a_ctrl->curr_region_index].
 			step_bound[dir];
+//[All][Main][Camera][DMS][36693][Person Liu] Fine Tune by Qualcomm patch 20140421 S       
+#ifdef CONFIG_SONY_FLAMINGO
+			if (copy_from_user(&ringing_params_kernel,
+			&(move_params->ringing_params[a_ctrl->curr_region_index]),
+			sizeof(struct damping_params_t))) {
+				pr_err("copy_from_user failed\n");
+				return -EFAULT;
+			}
+			CDBG("curr_region_index %d, hw_params 0x%x \n", a_ctrl->curr_region_index, ringing_params_kernel.hw_params);
+#endif
 		if ((dest_step_pos * sign_dir) <=
 			(step_boundary * sign_dir)) {
 
@@ -454,6 +616,10 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 	int32_t rc = -EFAULT;
 	uint16_t i = 0;
 	struct msm_camera_cci_client *cci_client = NULL;
+//[All][Main][Camera][DMS][36693][Person Liu] Fine Tune by Qualcomm patch 20140421 S
+#ifdef CONFIG_SONY_FLAMINGO
+	struct dentry *debugdir;
+#endif
 	CDBG("Enter\n");
 
 	for (i = 0; i < ARRAY_SIZE(actuators); i++) {
@@ -562,6 +728,12 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 
 	a_ctrl->curr_step_pos = 0;
 	a_ctrl->curr_region_index = 0;
+//[All][Main][Camera][DMS][36693][Person Liu] Fine Tune by Qualcomm patch 20140421 S
+#ifdef CONFIG_SONY_FLAMINGO
+	debugdir = debugfs_create_dir("camera",NULL);    
+	(void) debugfs_create_file("vcm", 0644, debugdir, a_ctrl, &vcm_fops); //access through echo "##" > /sys/kernel/debug/vcm
+	(void) debugfs_create_file("i2c_set", 0644, debugdir, a_ctrl, &i2c_set_fops); //creation for shell script
+#endif
 	CDBG("Exit\n");
 
 	return rc;
@@ -580,6 +752,12 @@ static int32_t msm_actuator_config(struct msm_actuator_ctrl_t *a_ctrl,
 	case CFG_GET_ACTUATOR_INFO:
 		cdata->is_af_supported = 1;
 		cdata->cfg.cam_name = a_ctrl->cam_name;
+//[All][Main][Camera][40101]Modify for Camera Second source 20140411 S
+#ifdef CONFIG_SONY_FLAMINGO
+		if(s5k5e2_version == 0x16)
+			cdata->cfg.cam_name = a_ctrl->cam_name = 6;
+		pr_info("msm_actuator_config: camera name = %d , id = %d\n",cdata->cfg.cam_name,a_ctrl->cam_name);
+#endif
 		break;
 
 	case CFG_SET_ACTUATOR_INFO:
