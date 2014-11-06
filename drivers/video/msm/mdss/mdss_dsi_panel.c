@@ -439,8 +439,11 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 /*[Arima5908][32703][StevenChen] LCM driver porting 2014/01/03 begin */
 #ifdef CONFIG_SONY_FLAMINGO
 	if(lcm_first_boot == 0)
-	{	
+	{
+		/*[Arima5908][43596][bozhi_lin] workaround for avoid current will increase 1mA after suspend resume 20140905 begin*/
+		#if 0
 		gpio_set_value(TRULY_MIPI_DISP_RST_N, 0);
+		#endif
 		msleep(120);	
 	}
 

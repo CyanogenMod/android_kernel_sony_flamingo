@@ -9,6 +9,9 @@
 /* [All][Main][LCM][DMS][38418][StevenChen] LCM auto detection for 2nd & 3rd source 2014/05/22 end */
 /* [All][Main][LCM][DMS][39942][StevenChen] Update O-Film LCM driver 2014/06/20 end */
 /*[Arima5908][32703][StevenChen] LCM driver porting 2014/01/03 end */
+/* [All][Main][LCM][DMS][43472][RaymondLin] LCM TCL-HX8379c driver 2014/09/02 begin */
+/include/ "dsi-panel-tcl-hx8379c-fwvga-video.dtsi"
+/* [All][Main][LCM][DMS][43472][RaymondLin] LCM TCL-HX8379c driver 2014/09/02 end */
 
 /* [Arima5908][32719][JessicaTseng] [All][Main][KEY][DMS]Porting reset key 20140103 start */
 &spmi_bus {
@@ -45,6 +48,11 @@
 &dsi_ofilm_hx8379c_fwvga_vid {
 	qcom,cont-splash-enabled;
 };
+/* [All][Main][LCM][DMS][43472][RaymondLin] LCM TCL-HX8379c driver 2014/09/02 begin */
+&dsi_tcl_hx8379c_fwvga_vid {
+	qcom,cont-splash-enabled;
+};
+/* [All][Main][LCM][DMS][43472][RaymondLin] LCM TCL-HX8379c driver 2014/09/02 end */
 /* [All][Main][LCM][DMS][39942][StevenChen] Update O-Film LCM driver 2014/06/20 end */
 /* [All][Main][LCM][DMS][38418][StevenChen] LCM auto detection for 2nd & 3rd source 2014/05/22 end */
 /* [Arima5908][34437][StevenChen] Rollback splash screen feature 2014/03/04 end */
