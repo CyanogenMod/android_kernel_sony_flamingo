@@ -107,19 +107,74 @@ endif
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v1-qrd-dvt.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-720p-cdp.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-1080p-cdp.dtb
+# [All][Main][SI][DMS][33120][akenhsu] Modify DTS mach. - LINUX 20140117 BEGIN
+ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_AP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_ap.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_SP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_sp.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_DP2})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_dp2.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_DP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_dp.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_PDP2})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_pdp2.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226DS_PDP1})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ds_pdp1.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_AP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_ap.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_SP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_sp.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_DP2})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_dp2.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_DP})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_dp.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_PDP2})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_pdp2.dtb
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8226SS_PDP1})
+	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-8226ss_pdp1.dtb
+else # Qualcomm Original
+# [All][Main][SI][DMS][33120][akenhsu] 20140117 END
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-720p-mtp.dtb
+# [All][Main][SI][DMS][33120][akenhsu] Modify DTS mach. - LINUX 20140117 BEGIN
+endif # End of Arima define
+# [All][Main][SI][DMS][33120][akenhsu] 20140117 END
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-1080p-mtp.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-qrd-evt.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8226-v2-qrd-dvt.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-720p-cdp.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-1080p-cdp.dtb
+# [All][Main][SI][DMS][33120][akenhsu] Modify DTS mach. - LINUX 20140117 BEGIN
+ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8926SS_AP})
 	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_ap.dtb
-	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_dp.dtb
-	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_dp2.dtb
-	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_pdp1.dtb
-	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_pdp2.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926SS_SP})
 	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_sp.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926SS_DP2})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_dp2.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926SS_DP})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_dp.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926SS_PDP2})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_pdp2.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926SS_PDP1})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ss_pdp1.dtb
+
+else ifeq ($(CONFIG_BSP_HW_V_CURRENT),${CONFIG_BSP_HW_V_8926DS_AP})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_ap.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926DS_SP})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_sp.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926DS_DP2})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_dp2.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926DS_DP})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_dp.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926DS_PDP2})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_pdp2.dtb
+else ifeq (${CONFIG_BSP_HW_V_CURRENT},${CONFIG_BSP_HW_V_8926DS_PDP1})
+	dtb-$(CONFIG_ARCH_MSM8226)  += msm8926-8926ds_pdp1.dtb
+else # Qualcomm Original
+# [All][Main][SI][DMS][33120][akenhsu] 20140117 END
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-720p-mtp.dtb
+# [All][Main][SI][DMS][33120][akenhsu] Modify DTS mach. - LINUX 20140117 BEGIN
+endif # End of Arima define
+# [All][Main][SI][DMS][33120][akenhsu] 20140117 END
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-1080p-mtp.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-qrd.dtb
 	dtb-$(CONFIG_ARCH_MSM8226)	+= msm8926-qrd-skug.dtb
